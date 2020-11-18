@@ -8,6 +8,18 @@ Master's IP address: 192.168.34.10
 Slave's IP address: 192.168.34.20
 ```
 
+# Tables of content
+
+- [Postgres DBA with Vagrant](#postgres-dba-with-vagrant)
+- [Tables of content](#tables-of-content)
+- [Setup via script](#setup-via-script)
+- [Manual Setup](#manual-setup)
+  - [Master server configuration:](#master-server-configuration)
+  - [Slave server configuration:](#slave-server-configuration)
+  - [Test Master-Slave Mode](#test-master-slave-mode)
+  - [Pgbackrest Configuration - Master server configuration](#pgbackrest-configuration---master-server-configuration)
+    - [Config Pgbackrest](#config-pgbackrest)
+
 # Setup via script
 
 [TODO]
