@@ -215,6 +215,149 @@ postgres=# select * from public.companies;
 (3 rows)
 ```
 
-## Pgbackrest Configuration
+## Pgbackrest Configuration - Master server configuration
 
-[TODO]
+Install pgbackrest
+```
+sudo apt-get -y install pgbackrest
+```
+
+Verify pgbackrest already installed
+
+```
+vagrant@ubuntu-bionic:~$ pgbackrest
+pgBackRest 2.30 - General help
+
+Usage:
+    pgbackrest [options] [command]
+
+Commands:
+    archive-get     Get a WAL segment from the archive.
+    archive-push    Push a WAL segment to the archive.
+    backup          Backup a database cluster.
+    check           Check the configuration.
+    expire          Expire backups that exceed retention.
+    help            Get help.
+    info            Retrieve information about backups.
+    restore         Restore a database cluster.
+    stanza-create   Create the required stanza data.
+    stanza-delete   Delete a stanza.
+    stanza-upgrade  Upgrade a stanza.
+    start           Allow pgBackRest processes to run.
+    stop            Stop pgBackRest processes from running.
+    version         Get version.
+
+Use 'pgbackrest help [command]' for more information.
+```
+
+Update postgresql.conf
+
+```
+sudo vim /etc/postgresql/11/main/postgresql.conf
+```
+
+Add the below lines
+
+```
+archive_mode = on
+archive_command = 'pgbackrest --stanza=demo archive-push %p'
+```
+
+Restart postgres
+```
+sudo service postgresql restart
+```
+
+Check postgresql configurations
+```
+sudo -iu postgres psql
+```
+
+```
+SELECT name,setting,context,source FROM pg_settings WHERE NAME IN ('listen_addresses','archive_mode','password_encryption');
+        name         |    setting    |  context   |       source
+---------------------+---------------+------------+--------------------
+ archive_mode        | on            | postmaster | configuration file
+ listen_addresses    | *             | postmaster | configuration file
+ password_encryption | scram-sha-256 | user       | configuration file
+(3 rows)
+```
+
+Exit psql & logout postgres user
+
+```
+\q
+
+exit;
+```
+
+### Config Pgbackrest
+
+```
+sudo mkdir -p /var/lib/pgbackrest 
+sudo chmod 0750 /var/lib/pgbackrest 
+sudo chown -R postgres:postgres /var/lib/pgbackrest
+```
+
+Set permission
+```
+sudo chown -R postgres:postgres /var/log/pgbackrest
+```
+
+Create backup file of pgbackrest
+```
+sudo cp /etc/pgbackrest.conf /etc/pgbackrest.conf.backup
+```
+
+Generate password
+```
+openssl rand -base64 48
+```
+
+Edit pgbackrest.conf
+```
+sudo vim /etc/pgbackrest.conf
+```
+
+Add flowing lines
+```
+[global]
+repo1-cipher-pass=nFYC2Vy6cqRejtXAw7OAc8jhl9ENLHOhE2L9QpqgKdHS85opIpr0O++BK9BLxC4B
+repo1-cipher-type=aes-256-cbc
+repo1-path=/var/lib/pgbackrest
+repo1-retention-diff=2
+repo1-retention-full=2
+log-level-console=info
+log-level-file=debug
+start-fast=y
+
+[demo]
+pg1-path=/var/lib/postgresql/11/main
+```
+
+Test create stanza
+```
+vagrant@ubuntu-bionic:~$ sudo -u postgres pgbackrest --stanza=demo stanza-create
+2020-11-18 06:21:35.129 P00   INFO: stanza-create command begin 2.30: --log-level-console=info --log-level-file=debug --pg1-path=/var/lib/postgresql/11/main --repo1-cipher-pass=<redacted> --repo1-cipher-type=aes-256-cbc --repo1-path=/var/lib/pgbackrest --stanza=demo
+2020-11-18 06:21:35.791 P00   INFO: stanza-create command end: completed successfully (662ms)
+```
+
+Check stanza
+```
+vagrant@ubuntu-bionic:~$ sudo -iu postgres pgbackrest --stanza=demo check
+2020-11-18 06:22:33.042 P00   INFO: check command begin 2.30: --log-level-console=info --log-level-file=debug --pg1-path=/var/lib/postgresql/11/main --repo1-cipher-pass=<redacted> --repo1-cipher-type=aes-256-cbc --repo1-path=/var/lib/pgbackrest --stanza=demo
+2020-11-18 06:22:34.145 P00   INFO: WAL segment 000000010000000000000003 successfully archived to '/var/lib/pgbackrest/archive/demo/11-1/0000000100000000/000000010000000000000003-188c9090400b4b47f71ec5dae2f3577acdecd38a.gz'
+2020-11-18 06:22:34.145 P00   INFO: check command end: completed successfully (1104ms)
+```
+
+Perform first full backup
+
+```
+sudo -u postgres pgbackrest --stanza=demo --type=full backup
+
+.......
+2020-11-18 06:23:16.369 P00   INFO: new backup label = 20201118-062305F
+2020-11-18 06:23:16.422 P00   INFO: backup command end: completed successfully (12085ms)
+2020-11-18 06:23:16.422 P00   INFO: expire command begin 2.30: --log-level-console=info --log-level-file=debug --repo1-cipher-pass=<redacted> --repo1-cipher-type=aes-256-cbc --repo1-path=/var/lib/pgbackrest --repo1-retention-diff=2 --repo1-retention-full=2 --stanza=demo
+2020-11-18 06:23:16.440 P00   INFO: expire command end: completed successfully (18ms)
+```
