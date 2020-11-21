@@ -27,6 +27,10 @@ Repository's IP address: 192.168.34.30
     - [Primary server](#primary-server)
     - [Create test stanza](#create-test-stanza)
   - [Perform a Backup](#perform-a-backup)
+  - [Perform a Restore](#perform-a-restore)
+  - [Parallel Backup / Restore](#parallel-backup--restore)
+    - [On repository server](#on-repository-server)
+  - [Replication](#replication)
 
 # Setup via script
 
@@ -263,3 +267,41 @@ sudo -u pgbackrest pgbackrest --stanza=demo backup
 2020-11-21 17:14:52.895 P00   INFO: expire command begin 2.30: --log-level-console=info --log-level-file=debug --pg1-host=192.168.34.10 --pg1-host-user=postgres --repo1-path=/var/lib/pgbackrest --repo1-retention-full=2 --stanza=demo
 2020-11-21 17:14:52.913 P00   INFO: expire command end: completed successfully (19ms)
 ```
+
+## Perform a Restore
+
+```
+sudo service postgresql stop
+
+sudo -u postgres pgbackrest --stanza=demo --delta restore
+2020-11-21 17:31:11.195 P00   INFO: restore command end: completed successfully (2445ms)
+
+sudo service postgresql start
+```
+
+## Parallel Backup / Restore
+
+### On repository server
+
+Edit pgbackrest.conf
+
+```
+sudo -iu pgbackrest vim /etc/pgbackrest.conf
+```
+
+Add process max option to parallel backup/restore
+```
+[global]
+process-max=3
+```
+
+Full backup
+```
+sudo -u pgbackrest pgbackrest --stanza=demo --type=full backup
+-------Result should be---------------
+2020-11-21 17:39:43.704 P00   INFO: expire command begin 2.30: --log-level-console=info --log-level-file=debug --pg1-host=192.168.34.10 --pg1-host-user=postgres --repo1-path=/var/lib/pgbackrest --repo1-retention-full=2 --stanza=demo
+2020-11-21 17:39:43.724 P00   INFO: expire command end: completed successfully (20ms)
+```
+
+## Replication
+[TODO]
