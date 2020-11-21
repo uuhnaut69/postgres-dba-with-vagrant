@@ -26,6 +26,7 @@ Repository's IP address: 192.168.34.30
     - [Repository server](#repository-server)
     - [Primary server](#primary-server)
     - [Create test stanza](#create-test-stanza)
+  - [Perform a Backup](#perform-a-backup)
 
 # Setup via script
 
@@ -249,4 +250,16 @@ sudo -u pgbackrest pgbackrest --stanza=demo check
 2020-11-21 16:31:33.227 P00   INFO: check command begin 2.30: --log-level-console=info --log-level-file=debug --pg1-host=192.168.34.10 --pg1-host-user=postgres --pg1-path=/var/lib/postgresql/11/main --repo1-path=/var/lib/pgbackrest --stanza=demo
 2020-11-21 16:31:35.694 P00   INFO: WAL segment 000000010000000000000002 successfully archived to '/var/lib/pgbackrest/archive/demo/11-1/0000000100000000/000000010000000000000002-61ad7b6c1a724a54b18f227e7e3cebe719e4f58c.gz'
 2020-11-21 16:31:35.796 P00   INFO: check command end: completed successfully (2570ms)
+```
+
+## Perform a Backup
+
+On repository server
+
+```
+sudo -u pgbackrest pgbackrest --stanza=demo backup
+-------Result should be---------------
+...
+2020-11-21 17:14:52.895 P00   INFO: expire command begin 2.30: --log-level-console=info --log-level-file=debug --pg1-host=192.168.34.10 --pg1-host-user=postgres --repo1-path=/var/lib/pgbackrest --repo1-retention-full=2 --stanza=demo
+2020-11-21 17:14:52.913 P00   INFO: expire command end: completed successfully (19ms)
 ```
